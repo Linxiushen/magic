@@ -321,11 +321,18 @@ class Agent(BaseAgent):
             return
         self._closed = True
 
+        self._clear_stream_fallback_correlation()
+
         if self._context_registered:
             from app.core.context.agent_context_registry import AgentContextRegistry
             AgentContextRegistry.get_instance().unregister(self.agent_context)
             self._context_registered = False
             logger.info(f"Agent context 已注销: {self.agent_context.get_agent_session_label()}")
+
+    def _clear_stream_fallback_correlation(self) -> None:
+        """清理当前 AgentContext 未消费的流式降级标记。"""
+        from agentlang.event import get_correlation_manager
+        get_correlation_manager().clear_stream_fallback_cid(self.agent_context.context_id)
 
     def dispose(self) -> None:
         """兼容性别名，语义等同于 close()。"""
@@ -809,6 +816,8 @@ class Agent(BaseAgent):
                     final_task_state=final_task_state,
                 ))
         finally:
+            # 确定性错误或用户取消可能跳过非流式 fallback，避免标记污染后续 run。
+            self._clear_stream_fallback_correlation()
             # 每次请求结束后回收内存碎片：强制 GC 并归还空闲 arena 给 OS
             self._reclaim_memory()
 

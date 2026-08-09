@@ -154,7 +154,7 @@ class RegularCallProcessor:
             stream_fallback_cid: Optional[str] = None
             correlation_scope_id = getattr(agent_context, "context_id", None)
             if not cm.get_active_correlation_id(EventPairType.AGENT_REPLY, correlation_scope_id):
-                stream_fallback_cid = cm.pop_stream_fallback_cid()
+                stream_fallback_cid = cm.pop_stream_fallback_cid(correlation_scope_id)
                 if stream_fallback_cid:
                     logger.info(
                         f"[{request_id}] 检测到 V2 流式降级场景，"
