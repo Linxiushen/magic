@@ -243,7 +243,7 @@ CRITICAL CONSTRAINTS:
     async def _status(self) -> ToolResult:
         from app.service.cron.store import load_cron_state, scan_jobs
         cron_dir = PathManager.get_cron_dir()
-        jobs = await scan_jobs({})
+        jobs, _ = await scan_jobs({})
         state = await load_cron_state()
         lines = [f"Cron dir: {cron_dir}", f"Total jobs: {len(jobs)}"]
         for job in jobs:
@@ -260,7 +260,7 @@ CRITICAL CONSTRAINTS:
 
     async def _list(self, params: ManageCronParams) -> ToolResult:
         from app.service.cron.store import scan_jobs
-        jobs = await scan_jobs({})
+        jobs, _ = await scan_jobs({})
         include_disabled = bool(params.include_disabled)
         if not include_disabled:
             jobs = [j for j in jobs if j.enabled]
@@ -373,7 +373,7 @@ CRITICAL CONSTRAINTS:
         if not params.job_id:
             return ToolResult.error("job_id is required for action=run")
         from app.service.cron.store import scan_jobs
-        jobs = await scan_jobs({})
+        jobs, _ = await scan_jobs({})
         job = next((j for j in jobs if j.id == params.job_id), None)
         if job is None:
             return ToolResult.error(f"Job '{params.job_id}' not found or has parse errors")
